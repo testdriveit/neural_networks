@@ -71,14 +71,97 @@ def feed_forward_sigm(x, nn, bias = False):
     '''
     outs = []
     for layer in nn:
-        tmp_layer = [inputs + [1] if bias else inputs for inputs in layer]
-        x = mult_sigm(x + [1] if bias else x, tmp_layer)
+        #Если у нас есть входы смещений, то вектор сигнала должен быть расширен на 1 элемент, равный 1
+        x = mult_sigm(x + [1] if bias else x, layer)
         outs.append(x)
     return outs
+
+class NeuralNetwork:	
+
+    nn = []
+    bias_enable = False
+    outs = []
+	
+    def __init__(self, nn, bias_enable = False):
+        '''
+			Инициализация структуры сети
+			In:
+				self - указатель на экземпляр объекта
+				nn - матрица, описывающая структуру сети
+			Out:
+				None
+		'''
+        self.nn = nn
+        self.bias_enable = bias_enable
+		
+    def add_bias(self):
+        '''
+			Добавление смещения
+			In:
+				self - указатель на экземпляр объекта
+			Out:
+				self.nn со смещением
+        '''
+        tmp_nn = []
+        for layer in self.nn:
+            layer = [inputs + [1] for inputs in layer]
+            tmp_nn.append(layer)
+        self.nn = tmp_nn
+        self.bias_enable = True
+        
+    def del_bias(self):
+        '''
+            Удаление смещения
+			In:
+				self - указатель на экземпляр объекта
+			Out:
+				self.nn без смещением
+        '''
+        if not self.bias_enable:
+            return
+        tmp_nn = []
+        for layer in self.nn:
+            layer = [inputs[:-1] for inputs in layer]
+            tmp_nn.append(layer)
+        self.nn = tmp_nn
+        self.bias_enable = False
+
+    def get_bias_enable(self):
+        '''
+            Получение признака наличия смещения
+            In:
+                self - указатель на экземпляр объекта
+            Out:
+                True - смещение есть
+                False - смещение отсутствует
+        '''
+        return self.bias_enable
+
+
+    def feed_forward_sigm(self, x):#, nn, bias = False):
+        '''
+            Перемножение входного вектора на нейросеть с применением функции сигмоида
+            In:
+                x - входной вектор-сигнал размерности 1xN
+                nn - нейросеть, состоящая из списка слоев
+			    bias - признак наличия смещения (у каждого нейрона)
+            Out:
+                результат операции - матрица с послойными результатами перемножения
+        '''
+        outs = []
+        for layer in self.nn:
+            #Если у нас есть входы смещений, то вектор сигнала должен быть расширен на 1 элемент, равный 1
+            x = mult_sigm(x + [1] if self.bias_enable else x, layer)
+            outs.append(x)
+        self.outs = outs
+		
 
 if __name__ == "__main__":
     nn = [[[1, 0.5],[-1,2]],[[1.5, -1]]]
     inp = [0, 1]
 
-    print(feed_forward_sigm(inp, nn, bias = True))
-    print(nn)
+    my_nn = NeuralNetwork(nn)
+    my_nn.add_bias()
+    my_nn.feed_forward_sigm(inp)
+    print(my_nn.outs)
+
