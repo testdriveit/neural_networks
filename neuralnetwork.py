@@ -166,7 +166,7 @@ class NeuralNetwork:
             Out:
                 ошибка сети (список)
         '''
-        self.delta0 = [u*(1 - u)*(C - u) for u, C in zip(self.outs[-1], target)]
+        self.delta0 = [o*(1 - o)*(t - o) for o, t in zip(self.outs[-1], target)]
 
     def back_propagation(self, rho, target):
         '''
