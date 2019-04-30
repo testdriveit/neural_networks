@@ -138,10 +138,11 @@ class NeuralNetwork:
         return self.bias_enable
 
 
-    def feed_forward_sigm(self, x):#, nn, bias = False):
+    def feed_forward_sigm(self, x):
         '''
             Перемножение входного вектора на нейросеть с применением функции сигмоида
             In:
+                self - указатель на экземпляр объекта
                 x - входной вектор-сигнал размерности 1xN
                 nn - нейросеть, состоящая из списка слоев
 			    bias - признак наличия смещения (у каждого нейрона)
@@ -154,6 +155,27 @@ class NeuralNetwork:
             x = mult_sigm(x + [1] if self.bias_enable else x, layer)
             outs.append(x)
         self.outs = outs
+
+    def get_delta0(self, target):
+        '''
+            Вычисление ошибки на выходе сети
+            In:
+                self - указатель на экземпляр объекта
+                output - выход нейронной сети (список)
+			    target - целевой показатель выхода (список)
+            Out:
+                ошибка сети (список)
+        '''
+        self.delta0 = [u*(1 - u)*(C - u) for u, C in zip(self.outs[-1], target)]
+
+    def back_propagation(self, rho, target):
+        '''
+            Вычисление обратного распространения ошибки
+        '''
+        pass
+
+
+
 		
 
 if __name__ == "__main__":
@@ -163,5 +185,5 @@ if __name__ == "__main__":
     my_nn = NeuralNetwork(nn)
     my_nn.add_bias()
     my_nn.feed_forward_sigm(inp)
-    print(my_nn.outs)
-
+    for i in enumerate(my_nn.outs):
+        print(i)
