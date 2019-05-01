@@ -62,7 +62,7 @@ def feed_forward(x, nn):
         outs.append(x)
     return outs
 
-def feed_forward_sigm(x, nn, bias = False):
+def feed_forward_sigm(signal, nn, bias = False):
     '''
         Перемножение входного вектора на нейросеть с применением функции сигмоида
         In:
@@ -73,6 +73,7 @@ def feed_forward_sigm(x, nn, bias = False):
             результат операции - матрица с послойными результатами перемножения
     '''
     outs = []
+    x = [i for i in signal]
     for layer in nn:
         #Если у нас есть входы смещений, то вектор сигнала должен быть расширен на 1 элемент, равный 1
         x = mult_sigm(x + [1] if bias else x, layer)
@@ -140,7 +141,7 @@ class NeuralNetwork:
         return self.bias_enable
 
 
-    def feed_forward_sigm(self, x):
+    def feed_forward_sigm(self, signal):
         '''
             Перемножение входного вектора на нейросеть с применением функции сигмоида
             In:
@@ -151,12 +152,19 @@ class NeuralNetwork:
             Out:
                 результат операции - матрица с послойными результатами перемножения
         '''
+        x = [i for i in signal]
         outs = []
         for layer in self.nn:
             #Если у нас есть входы смещений, то вектор сигнала должен быть расширен на 1 элемент, равный 1
             x = mult_sigm(x + [1] if self.bias_enable else x, layer)
             outs.append(x)
         self.outs = outs
+
+    def get_errors(self, taget):
+        '''
+            Ошибка вычисления
+        '''
+        self.errors = [(t - o)**2 for t,o in zip(target, self.outs[-1])]
 
     def get_delta0(self, target):
         '''
@@ -170,12 +178,11 @@ class NeuralNetwork:
         self.delta0 = [o*(1 - o)*(t - o) for o, t in zip(self.outs[-1], target)]
 
     def get_delta_hidden_step(self, layer, out, delta):
-        res_delta = []
         temp = [0 for _ in range(len(layer[0]))]
         for i in range(len(layer)):
             for j in range(len(layer[i])):
-                temp[j] = layer[i][j]*delta[i]
-        res_delta = out
+                temp[j] += layer[i][j]*delta[i]
+        res_delta = [i for i in out]
         for i in range(len(res_delta)):
             res_delta[i] = res_delta[i]*(1 - res_delta[i])*temp[i]
         return res_delta
@@ -193,10 +200,12 @@ class NeuralNetwork:
         '''
         self.get_delta0(target)
         tmp_delta = self.delta0
-        self.deltas.insert(0, tmp_delta)
+        loc_deltas = []
+        loc_deltas.insert(0, tmp_delta)
         for layer,out in zip(self.nn[-1:0:-1], self.outs[-2::-1]):
             tmp_delta = self.get_delta_hidden_step(layer, out, tmp_delta)
-            self.deltas.insert(0, tmp_delta)
+            loc_deltas.insert(0, tmp_delta)
+        self.deltas = loc_deltas
 
     def back_propagation_weights(self, signal, target, rho):
         '''
@@ -209,7 +218,7 @@ class NeuralNetwork:
             Out:
                 self.nn с измененными параметрами
         '''
-        tmp_signal = signal
+        tmp_signal = [i for i in signal]
         for i in range(len(self.nn[0])):
             if self.bias_enable:
                 tmp_signal += [1]
@@ -238,17 +247,43 @@ class NeuralNetwork:
 		
 
 if __name__ == "__main__":
-    nn = [[[1, 0.5],[-1,2]],[[1.5, -1]]]
-    nn2 = [[[1, 0.5],[-1,2]],[[1.5, -1],[-1,2]]]
-    target1 = [1]
-    target2 = [1,0]
-    inp = [0, 1]
+
+#    nn = [[[0.45, -0.12], [0.78, 0.13]],[[1.5, -2.3]]]
+#    signal = [1, 0]
+#    target = [1]
+
+#    my_nn = NeuralNetwork(nn)
+#    my_nn.feed_forward_sigm(signal)
+#    print(my_nn.outs)
+#    my_nn.get_errors(target)
+#    print(my_nn.errors)
+#    my_nn.back_propagation_deltas(target)
+#    print(my_nn.deltas)
+#    my_nn.back_propagation_weights(signal, target, 0.7)
+#    print(my_nn.nn)
+
+#    my_nn.feed_forward_sigm(signal)
+#    print(my_nn.outs)
+#    my_nn.get_errors(target)
+#    print(my_nn.errors)
+
+    nn = [[[20,20], [20,20]],[[-60,60]]]
+    signal = [[0,0],[0,1],[1,0],[1,1]]
+    targets = [[0],[1],[1],[0]]
 
     my_nn = NeuralNetwork(nn)
-    print(my_nn.nn)
-    my_nn.learn_nn(inp, target1, 10, 10000)
-    my_nn.feed_forward_sigm(inp)
-    print()
-    print(my_nn.nn)
-    print()
-    print(my_nn.outs)
+    my_nn.add_bias()
+
+    for s,t in zip(signal,targets):
+        my_nn.feed_forward_sigm(s)
+        print(s, my_nn.outs[-1])
+    
+    j = 0
+    while(j < 100000):
+        for s,t in zip(signal,targets):
+            my_nn.learn_nn(s, t, 0.5, 1)
+        j += 1
+    
+    for s,t in zip(signal,targets):
+        my_nn.feed_forward_sigm(s)
+        print(s, my_nn.outs[-1])
