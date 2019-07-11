@@ -46,13 +46,48 @@ class NeuralNetwork:
         self.out = [0 for _ in range(self.layers[-1])]
         self.erro = [0 for _ in range(self.layers[-1])]
 
+    def printLayer(self, layerNumber):
+        try:
+            layer = self.network[layerNumber]
+            print('Слой %d'%layerNumber)
+            for x in range(len(layer)):
+                for y in range(len(layer[x])):
+                    print(layer[x][y], end = ' ')
+                print()
+            print()
+        except Exception:
+            print('Указан некорректный номер слоя')
+
     def printLayers(self):
-        print(self.layers)
+        for i in range(len(self.network)):
+            self.printLayer(i)
+    
+    def printOut(self):
+        print('Значения выходного слоя:')
+        for o in self.out:
+            print(0, end = ' ')
+        print('\n')
+    
+    def printHiddenOut(self, hiddenLayerNum):
+        try:
+            hiddenLayer = self.hiddens[hiddenLayerNum]
+            print('Значения на выходах скрытого слоя %d'%hiddenLayerNum)
+            for o in hiddenLayer:
+                print(o, end = ' ')
+            print('\n')
+        except Exception:
+            print('Указан некорректный номер скрытого слоя')
+    
+    def printHiddenOuts(self):
+        for hOuts in range(len(self.hiddens)):
+            self.printHiddenOut(hOuts)
 
     def printNetwork(self):
-        print(self.network)
+        self.printLayers()
+        self.printHiddenOuts()
+        self.printOut()
+        
 
 if __name__ == '__main__':
-    nn = NeuralNetwork.getInstance(2, 4, 5, 1)
+    nn = NeuralNetwork.getInstance(2, 2, 1)
     nn.printNetwork()
-            
