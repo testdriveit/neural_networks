@@ -11,6 +11,14 @@ def sigmoid(x):
     '''
     return 1/(1+exp(-x))
 
+def sigmoidDerivative(x):
+    '''
+        Вычисление производной сигмоида по формуле x * (1 - x)
+        In: x - число
+        Out: результат операции - число
+    '''
+    return x * (1 - x)
+
 def dot(x, y):
     '''
         Вычисление поэлементного произведения векторов с последующим сложением
@@ -175,7 +183,7 @@ class NeuralNetwork:
             Out:
                 ошибка сети (список)
         '''
-        self.delta0 = [o*(1 - o)*(t - o) for o, t in zip(self.outs[-1], target)]
+        self.delta0 = [(t - o) * sigmoidDerivative(o) for o, t in zip(self.outs[-1], target)]
 
     def get_delta_hidden_step(self, layer, out, delta):
         temp = [0 for _ in range(len(layer[0]))]
@@ -184,7 +192,7 @@ class NeuralNetwork:
                 temp[j] += layer[i][j]*delta[i]
         res_delta = [i for i in out]
         for i in range(len(res_delta)):
-            res_delta[i] = res_delta[i]*(1 - res_delta[i])*temp[i]
+            res_delta[i] *= sigmoidDerivative(res_delta[i])*temp[i]
         return res_delta
 
 
@@ -279,7 +287,7 @@ if __name__ == "__main__":
         print(s, my_nn.outs[-1])
     
     j = 0
-    while(j < 100000):
+    while(j < 10000):
         for s,t in zip(signal,targets):
             my_nn.learn_nn(s, t, 0.5, 1)
         j += 1
